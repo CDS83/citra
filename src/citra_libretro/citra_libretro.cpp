@@ -97,6 +97,16 @@ void LibRetro::OnConfigureEnvironment() {
          "Resolution scale factor; 1x (Native)|2x|3x|4x|5x|6x|7x|8x|9x|10x"},
         {"citra_layout_option", "Screen layout positioning; Default Top-Bottom Screen|Single "
                                 "Screen Only|Large Screen, Small Screen|Side by Side"},
+        {"citra_custom_layout", "Custom layout; disabled|enabled"},
+        {"citra_custom_top_left", "Custom top left; 526|70|35|10|15|20|25|30|35|40"},
+        {"citra_custom_top_top", "Custom top top; 158|29|15|10|15|17|20|25|30|35|40"},
+        {"citra_custom_top_width", "Custom top width; 550|660|330|310|315|320|325|330|335|340|345|350|355|360|365|370|375|380|385|390|395|400"},
+        {"citra_custom_top_height", "Custom top height; 705|396|198|180|185|190|195|198|200|205|210|215|220|225|230|235|240"},
+        {"citra_custom_bottom_left", "Custom bottom left; 581|136|68|60|65|68|70|75|80|85|90|95|100"},
+        {"citra_custom_bottom_top", "Custom bottom top; 1077|546|273|250|255|260|265|270|273|275|280|285|290"},
+        {"citra_custom_bottom_width", "Custom bottom width; 440|530|265|260|265|270|275|280|285|290|295|300|305|310|315|320"},
+        {"citra_custom_bottom_height", "Custom bottom height; 705|396|198|180|185|190|195|198|200|205|210|215|220|225|230|235|240|245|250"},
+        {"citra_custom_layout_option", "Custom layout option; None|1x (Native)|2x|4x"},
         {"citra_swap_screen", "Prominent 3DS screen; Top|Bottom"},
         {"citra_analog_function",
          "Right analog function; C-Stick and Touchscreen Pointer|Touchscreen Pointer|C-Stick"},
@@ -209,6 +219,81 @@ void UpdateSettings() {
     } else {
         LOG_ERROR(Frontend, "Unknown layout type: {}.", layout);
         Settings::values.layout_option = Settings::LayoutOption::Default;
+    }
+
+    // Custom layout option
+    auto customLayoutOption = LibRetro::FetchVariable("citra_custom_layout_option", "None");
+    auto endOfLayoutOption = customLayoutOption.find('x'); // All before 'x' in "_x ...", e.g "1x (Native)"
+    if (endOfLayoutOption == std::string::npos) {
+        Settings::values.custom_layout = false;
+    } else {
+        int option = stoi(customLayoutOption.substr(0, endOfLayoutOption));
+        switch(option) {
+          case 1:
+            Settings::values.resolution_factor = 1;
+            Settings::values.layout_option = Settings::LayoutOption::Default;
+            Settings::values.custom_layout = true;
+            Settings::values.custom_top_left = 35;
+            Settings::values.custom_top_top = 15;
+            Settings::values.custom_top_right = 35 + 330;
+            Settings::values.custom_top_bottom = 15 + 198;
+            Settings::values.custom_bottom_left = 68;
+            Settings::values.custom_bottom_top = 273;
+            Settings::values.custom_bottom_right = 68 + 264;
+            Settings::values.custom_bottom_bottom = 273 + 198;
+            break;
+          case 2:
+            Settings::values.resolution_factor = 2;
+            Settings::values.layout_option = Settings::LayoutOption::Default;
+            Settings::values.custom_layout = true;
+            Settings::values.custom_top_left = 70;
+            Settings::values.custom_top_top = 29;
+            Settings::values.custom_top_right = 70 + 660;
+            Settings::values.custom_top_bottom = 29 + 396;
+            Settings::values.custom_bottom_left = 136;
+            Settings::values.custom_bottom_top = 546;
+            Settings::values.custom_bottom_right = 136 + 528;
+            Settings::values.custom_bottom_bottom = 546 + 396;
+            break;
+          case 4:
+            Settings::values.resolution_factor = 4;
+            Settings::values.layout_option = Settings::LayoutOption::Default;
+            Settings::values.custom_layout = true;
+            Settings::values.custom_top_left = 526;
+            Settings::values.custom_top_top = 158;
+            Settings::values.custom_top_right = 526 + 550;
+            Settings::values.custom_top_bottom = 158 + 705;
+            Settings::values.custom_bottom_left = 581;
+            Settings::values.custom_bottom_top = 1077;
+            Settings::values.custom_bottom_right = 581 + 440;
+            Settings::values.custom_bottom_bottom = 1077 + 705;
+            break;
+        }
+    }
+
+    // Custom layout
+    auto custom_layout = LibRetro::FetchVariable("citra_custom_layout", "disabled");
+    if (custom_layout == "enabled") {
+      Settings::values.layout_option = Settings::LayoutOption::Default;
+      Settings::values.custom_layout = true;
+
+      auto custom_top_left = LibRetro::FetchVariable("citra_custom_top_left", "0");
+      auto custom_top_top = LibRetro::FetchVariable("citra_custom_top_top", "0");
+      auto custom_top_width = LibRetro::FetchVariable("citra_custom_top_width", "0");
+      auto custom_top_height = LibRetro::FetchVariable("citra_custom_top_height", "0");
+      auto custom_bottom_left = LibRetro::FetchVariable("citra_custom_bottom_left", "0");
+      auto custom_bottom_top = LibRetro::FetchVariable("citra_custom_bottom_top", "0");
+      auto custom_bottom_width = LibRetro::FetchVariable("citra_custom_bottom_width", "0");
+      auto custom_bottom_height = LibRetro::FetchVariable("citra_custom_bottom_height", "0");
+
+      Settings::values.custom_top_left = std::stoi(custom_top_left);
+      Settings::values.custom_top_top = std::stoi(custom_top_top);
+      Settings::values.custom_top_right = std::stoi(custom_top_width) + Settings::values.custom_top_left;
+      Settings::values.custom_top_bottom = std::stoi(custom_top_height) + Settings::values.custom_top_top;
+      Settings::values.custom_bottom_left = std::stoi(custom_bottom_left);
+      Settings::values.custom_bottom_top = std::stoi(custom_bottom_top);
+      Settings::values.custom_bottom_right = std::stoi(custom_bottom_width) + Settings::values.custom_bottom_left;
+      Settings::values.custom_bottom_bottom = std::stoi(custom_bottom_height) + Settings::values.custom_bottom_top;
     }
 
     auto deadzone = LibRetro::FetchVariable("citra_deadzone", "15");
